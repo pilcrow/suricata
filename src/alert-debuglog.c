@@ -50,6 +50,8 @@
 #include "flow-bit.h"
 #include "util-var-name.h"
 
+#include "util-logopenfile.h"
+
 #define DEFAULT_LOG_FILENAME "alert-debug.log"
 
 #define MODULE_NAME "AlertDebugLog"
@@ -444,23 +446,16 @@ OutputCtx *AlertDebugLogInitCtx(ConfNode *conf)
     LogFileCtx *file_ctx = NULL;
 
     file_ctx = LogFileNewCtx();
-    if(file_ctx == NULL) {
+    if (file_ctx == NULL) {
         SCLogDebug("couldn't create new file_ctx");
         goto error;
     }
 
-    const char *filename = ConfNodeLookupChildValue(conf, "filename");
-    if (filename == NULL)
-        filename = DEFAULT_LOG_FILENAME;
-
-    const char *mode = ConfNodeLookupChildValue(conf, "append");
-    if (mode == NULL)
-        mode = DEFAULT_LOG_MODE_APPEND;
-
-    /** fill the new LogFileCtx with the specific AlertDebugLog configuration */
-    ret = AlertDebugLogOpenFileCtx(file_ctx, filename, mode);
-    if(ret < 0)
+    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0)
+        SCLogError(SC_ERR_LOGOPEN, MODULE_NAME ": failed to open %s: %s",
+                   log_path, strerror(errno));
         goto error;
+    }
 
     OutputCtx *output_ctx = SCMalloc(sizeof(OutputCtx));
     if (output_ctx == NULL)
@@ -479,35 +474,3 @@ error:
 
     return NULL;
 }
-
-/** \brief Read the config set the file pointer, open the file
- *  \param file_ctx pointer to a created LogFileCtx using LogFileNewCtx()
- *  \param filename name of log file
- *  \return -1 if failure, 0 if succesful
- * */
-int AlertDebugLogOpenFileCtx(LogFileCtx *file_ctx, const char *filename, const
-                                char *mode)
-{
-    char log_path[PATH_MAX];
-    char *log_dir;
-
-    if (ConfGet("default-log-dir", &log_dir) != 1)
-        log_dir = DEFAULT_LOG_DIR;
-
-    snprintf(log_path, PATH_MAX, "%s/%s", log_dir, filename);
-
-    if (strcasecmp(mode, "yes") == 0) {
-        file_ctx->fp = fopen(log_path, "a");
-    } else {
-        file_ctx->fp = fopen(log_path, "w");
-    }
-
-    if (file_ctx->fp == NULL) {
-        SCLogError(SC_ERR_FOPEN, "failed to open %s: %s", log_path,
-            strerror(errno));
-        return -1;
-    }
-
-    return 0;
-}
-

@@ -46,6 +46,8 @@
 #include "app-layer.h"
 #include "util-privs.h"
 
+#include "util-logopenfile.h"
+
 #define DEFAULT_LOG_FILENAME "http.log"
 
 #define MODULE_NAME "LogHttpLog"
@@ -420,18 +422,13 @@ OutputCtx *LogHttpLogInitCtx(ConfNode *conf)
         return NULL;
     }
 
-    const char *filename = ConfNodeLookupChildValue(conf, "filename");
-    if (filename == NULL)
-        filename = DEFAULT_LOG_FILENAME;
-
-    const char *mode = ConfNodeLookupChildValue(conf, "append");
-    if (mode == NULL)
-        mode = DEFAULT_LOG_MODE_APPEND;
-    /** fill the new LogFileCtx with the specific LogHttpLog configuration */
-    ret=LogHttpLogOpenFileCtx(file_ctx, filename, mode);
-
-    if(ret < 0)
+    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0)
+        SCLogError(SC_ERR_HTTP_LOG_GENERIC,
+                   MODULE_NAME ": failed to open %s: %s", log_path,
+                   strerror(errno));
+        LogFileFreeCtx(logfile_ctx);
         return NULL;
+    }
 
     OutputCtx *output_ctx = SCCalloc(1, sizeof(OutputCtx));
     if (output_ctx == NULL)
@@ -448,35 +445,3 @@ static void LogHttpLogDeInitCtx(OutputCtx *output_ctx)
     LogFileFreeCtx(logfile_ctx);
     free(output_ctx);
 }
-
-/** \brief Read the config set the file pointer, open the file
- *  \param file_ctx pointer to a created LogFileCtx using LogFileNewCtx()
- *  \param config_file for loading separate configs
- *  \return -1 if failure, 0 if succesful
- * */
-int LogHttpLogOpenFileCtx(LogFileCtx *file_ctx, const char *filename, const
-                            char *mode)
-{
-    char log_path[PATH_MAX];
-    char *log_dir;
-
-    if (ConfGet("default-log-dir", &log_dir) != 1)
-        log_dir = DEFAULT_LOG_DIR;
-
-    snprintf(log_path, PATH_MAX, "%s/%s", log_dir, filename);
-
-    if (strcasecmp(mode, "yes") == 0) {
-        file_ctx->fp = fopen(log_path, "a");
-    } else {
-        file_ctx->fp = fopen(log_path, "w");
-    }
-
-    if (file_ctx->fp == NULL) {
-        SCLogError(SC_ERR_FOPEN, "failed to open %s: %s", log_path,
-            strerror(errno));
-        return -1;
-    }
-
-    return 0;
-}
-
