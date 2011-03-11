@@ -339,9 +339,7 @@ OutputCtx *AlertFastLogInitCtx(ConfNode *conf)
         return NULL;
     }
 
-    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0)
-        SCLogError(SC_ERR_LOGOPEN, MODULE_NAME ": failed to open %s: %s",
-                   log_path, strerror(errno));
+    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0) {
         LogFileFreeCtx(logfile_ctx);
         return NULL;
     }
@@ -351,8 +349,6 @@ OutputCtx *AlertFastLogInitCtx(ConfNode *conf)
         return NULL;
     output_ctx->data = logfile_ctx;
     output_ctx->DeInit = AlertFastLogDeInitCtx;
-
-    SCLogInfo("Fast log output initialized, filename: %s", filename);
 
     return output_ctx;
 }

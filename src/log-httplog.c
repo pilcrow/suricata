@@ -422,11 +422,8 @@ OutputCtx *LogHttpLogInitCtx(ConfNode *conf)
         return NULL;
     }
 
-    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0)
-        SCLogError(SC_ERR_HTTP_LOG_GENERIC,
-                   MODULE_NAME ": failed to open %s: %s", log_path,
-                   strerror(errno));
-        LogFileFreeCtx(logfile_ctx);
+    if (SCConfLogOpenGeneric(conf, file_ctx, DEFAULT_LOG_FILENAME) < 0) {
+        LogFileFreeCtx(file_ctx);
         return NULL;
     }
 

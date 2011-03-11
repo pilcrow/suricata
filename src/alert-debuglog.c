@@ -451,9 +451,7 @@ OutputCtx *AlertDebugLogInitCtx(ConfNode *conf)
         goto error;
     }
 
-    if (SCConfLogOpenGeneric(conf, logfile_ctx, DEFAULT_LOG_FILENAME) < 0)
-        SCLogError(SC_ERR_LOGOPEN, MODULE_NAME ": failed to open %s: %s",
-                   log_path, strerror(errno));
+    if (SCConfLogOpenGeneric(conf, file_ctx, DEFAULT_LOG_FILENAME) < 0) {
         goto error;
     }
 
