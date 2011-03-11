@@ -28,7 +28,8 @@
 #include "tm-modules.h"      /* LogFileCtx */
 
 FILE * SCLogOpenFileFp(const char *, const char *);
-int SCConfGenericOutput(ConfNode *conf, LogFileCtx *, const char *);
+FILE * SCLogOpenSocketFp(const char *);
+int SCConfLogOpenGeneric(ConfNode *conf, LogFileCtx *, const char *);
 
 #endif /* __UTIL_LOGOPENFILE_H__ */
 
