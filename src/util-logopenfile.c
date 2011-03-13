@@ -20,6 +20,8 @@
  * \file
  *
  * \author Mike Pomraning <mpomraning@qualys.com>
+ *
+ * File-like output for logging:  regular files and sockets.
  */
 #include <sys/socket.h>
 #include <sys/un.h>
